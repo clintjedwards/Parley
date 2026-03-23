@@ -1,0 +1,21 @@
+[server]
+bind_address = "0.0.0.0:7000"
+storage_path = "/var/lib/parley/parley.db"
+
+[git]
+repo_path  = "/var/lib/parley/repo"
+remote_url = ""
+branch     = "main"
+
+[webhook]
+secret = ""
+
+[typst]
+binary_path = "typst"
+
+[log]
+level  = "info"
+pretty = false
+
+[development]
+bypass_auth = false
