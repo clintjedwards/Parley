@@ -1,0 +1,16 @@
+# Mac files
+.DS_Store
+
+# VS Code
+.vscode
+
+#secret files
+.env
+!docker/.env
+
+# rust build dir
+target/
+
+# Remove auto-built documentation
+parley/docs/book/html/*
+!parley/docs/book/html/.gitkeep

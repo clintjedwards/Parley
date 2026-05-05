@@ -1,18 +1,52 @@
 use crate::{conf, storage};
 use dropshot::{
-    ApiDescription, ClientErrorStatusCode, ConfigDropshot, HttpError, HttpResponseOk,
-    HttpServer, RequestContext, RequestInfo, ServerBuilder, endpoint,
+    endpoint, ApiDescription, ClientErrorStatusCode, ConfigDropshot, HttpError, HttpResponseOk,
+    HttpServer, RequestContext, RequestInfo, ServerBuilder,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::{net::SocketAddr, pin::Pin, str::FromStr, sync::atomic, sync::Arc};
 
 const BUILD_SEMVER: &str = env!("BUILD_SEMVER");
+const BUILD_COMMIT: &str = env!("BUILD_COMMIT");
+
+/// A constant for the header that tracks which version of the API a client has requested.
+const API_VERSION_HEADER: &str = "parley-api-version";
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+pub enum ApiVersion {
+    V0,
+}
+
+impl ApiVersion {
+    pub fn to_list() -> [String; 1] {
+        ["v0".into()]
+    }
+}
+
+impl FromStr for ApiVersion {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        match s {
+            "v0" => Ok(ApiVersion::V0),
+            _ => Err(anyhow::anyhow!("Invalid API version")),
+        }
+    }
+}
+
+/// Holds objects that are created and used over the lifetime of a single request.
+///
+/// This is different from [`dropshot::RequestContext`] since that is automatically created for us but we need some
+/// more Gofer specific information.
+#[derive(Debug, Clone)]
+pub struct RequestMetadata {
+    #[allow(dead_code)]
+    api_version: ApiVersion,
+}
 
 pub struct PreflightOptions {
     pub bypass_auth: bool,
-    pub resources: Vec<super::permissioning::Resource>,
-    pub action: super::permissioning::Action,
 }
 
 #[derive(Debug)]

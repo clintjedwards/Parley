@@ -72,3 +72,8 @@ anyhow = { version = "1.0", features = ["backtrace"] }
 # Structured logging
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+strum = "0.28.0"
+dirs = "6.0.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
