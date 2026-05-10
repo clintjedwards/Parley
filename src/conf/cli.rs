@@ -1,19 +1,7 @@
 use crate::conf::ConfigType;
 use serde::{Deserialize, Serialize};
-use strum::{Display, EnumString};
 
 const DEFAULT_CLI_CONFIG: &str = include_str!("./default_cli_config.toml");
-
-#[derive(Default, Debug, Clone, ValueEnum, Serialize, PartialEq, Eq, EnumString, VariantNames)]
-#[strum(ascii_case_insensitive)]
-#[serde(try_from = "String")]
-pub(crate) enum OutputFormat {
-    #[default]
-    Pretty,
-    Plain,
-    Silent,
-    Json,
-}
 
 #[derive(Deserialize, Debug, Default, Clone, PartialEq, Eq)]
 pub struct CliConfig {
@@ -50,7 +38,7 @@ impl ConfigType for CliConfig {
         let user_home = dirs::home_dir().expect("Unable to get home directory");
 
         vec![
-            user_home.join(".gofer_dev.toml"),
+            user_home.join(".parley_dev.toml"),
             user_home.join(".config/parley_dev.toml"),
         ]
     }

@@ -12,7 +12,10 @@ pub struct ApiConfig {
 }
 
 #[derive(Deserialize, Default, Debug, Clone)]
-pub struct General {}
+pub struct General {
+    /// The entire service's log level.
+    pub log_level: String,
+}
 
 #[derive(Deserialize, Default, Debug, Clone)]
 pub struct Development {
