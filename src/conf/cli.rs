@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 const DEFAULT_CLI_CONFIG: &str = include_str!("./default_cli_config.toml");
 
-#[derive(Deserialize, Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Deserialize, Debug, Default, Clone)]
 pub struct CliConfig {
     /// The URL of the API server.
     pub api_base_url: String,
@@ -15,7 +15,7 @@ pub struct CliConfig {
     pub detail: bool,
 
     /// Don't verify server certificate; useful for development.
-    pub insecure_skip_tls_verify: Option<bool>,
+    pub insecure_skip_tls_verify: bool,
 
     /// What format the CLI will write to the terminal in.
     #[serde(deserialize_with = "crate::cli::deserialize_output_format")]
@@ -23,6 +23,12 @@ pub struct CliConfig {
 
     /// An API token to authenticate to the API server with.
     pub token: String,
+
+    /// Unique identifier for user.
+    pub username: String,
+
+    /// Full, human readable name for user.
+    pub full_name: String,
 }
 
 impl ConfigType for CliConfig {

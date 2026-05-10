@@ -1,11 +1,11 @@
 pub mod api;
 pub mod cli;
 
-use anyhow::Result;
 use figment::{
     providers::{Env, Format, Toml},
     Figment,
 };
+use rootcause::prelude::*;
 use serde::Deserialize;
 #[allow(deprecated)]
 use std::path::PathBuf;
@@ -21,7 +21,7 @@ pub struct Configuration<T: ConfigType> {
 }
 
 impl<T: ConfigType> Configuration<T> {
-    pub fn load(path_override: Option<PathBuf>) -> Result<T> {
+    pub fn load(path_override: Option<PathBuf>) -> Result<T, Report> {
         let mut config = Figment::new().merge(Toml::string(T::default_config()));
 
         if let Some(path) = path_override {

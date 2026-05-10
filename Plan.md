@@ -38,9 +38,7 @@ via webhook. All reading and discussing happens in the TUI.
 ```
 Author writes RFD in Typst locally
         ↓
-git push → GitHub
-        ↓
-GitHub webhook → Parley server
+Parley server
         ↓
 Server pulls repo, compiles Typst → stores rendered content
         ↓
@@ -152,28 +150,6 @@ It exposes a JSON API consumed by the TUI client.
 3. `git pull --ff-only` (fallback: `git fetch && git reset --hard origin/<branch>`)
 4. For each changed RFD: read `metadata.toml`, compile Typst, store revision
 5. Return 200
-
----
-
-## Auth
-
-Mirrors the auth model from Gofer. Token-based, no sessions.
-
-- Tokens are random strings; only the SHA256 hash is stored in the DB
-- Plaintext is shown exactly once on creation and never again
-- Every API request sends `Authorization: Bearer <token>`
-- Tokens have roles; roles have permissions over resources + actions
-
-**System roles** (immutable):
-- `bootstrap` — full access; created once via `parley server bootstrap`
-- `admin` — manage tokens and all content
-- `member` — read RFDs, create/edit own threads and messages
-- `reader` — read-only
-
-**Bootstrap**: on first run, `parley server bootstrap` prints a bootstrap token. All other tokens
-are created through the API or TUI admin panel using that token.
-
-**Development**: `bypass_auth = true` in config skips all auth checks.
 
 ---
 
@@ -304,10 +280,6 @@ Config search order: embedded defaults → `/etc/parley/parley.toml` → `~/.con
 parley server start                       # start the API server
 parley server bootstrap                   # print bootstrap token (first run only)
 parley server sync                        # manually trigger full repo re-sync
-
-parley token create --user alice --role member
-parley token list
-parley token disable <id>
 
 parley                                    # launch the TUI (connects to configured server)
 ```

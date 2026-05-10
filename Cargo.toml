@@ -11,9 +11,6 @@ path = "src/main.rs"
 # HTML sanitizer — strip unsafe tags/attrs from typst output and message bodies
 ammonia = "4.1"
 
-# Error chaining with .context()
-anyhow = { version = "1.0", features = ["backtrace"] }
-
 # Byte buffer utilities
 bytes = "1.11.1"
 
@@ -106,6 +103,7 @@ tungstenite = "0.26"
 async-trait = "0.1"
 
 hyper = { version = "1.6", features = ["server", "full"] }
+rand = "0.10.1"
 
 
 [dev-dependencies]

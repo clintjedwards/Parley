@@ -14,23 +14,12 @@
 //! let some_other_db_call(&mut tx).await;
 //! tx.commit() // Make sure you call commit or changes made inside the transaction wont be changed.
 
-pub mod events;
-pub mod messages;
-pub mod revisions;
-pub mod rfds;
-pub mod roles;
-pub mod threads;
-pub mod tokens;
-
-use anyhow::Result;
-use futures::TryFutureExt;
-use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use rootcause::prelude::*;
 use sqlx::{
     migrate,
     pool::PoolConnection,
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-    Pool, Sqlite, SqliteConnection, Transaction,
+    Pool, Sqlite, Transaction,
 };
 use std::{fs::File, io, ops::Deref, path::Path, str::FromStr};
 
@@ -107,7 +96,7 @@ fn touch_file(path: &Path) -> io::Result<()> {
 }
 
 impl Db {
-    pub async fn new(path: &str) -> Result<Self> {
+    pub async fn new(path: &str) -> Result<Self, Report> {
         touch_file(Path::new(path)).unwrap();
 
         // We create two different pools of connections. The read pool has many connections and is high concurrency.

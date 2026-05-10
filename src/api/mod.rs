@@ -1,11 +1,11 @@
 use crate::{conf, storage};
-use anyhow::{anyhow, Context, Result};
 use dropshot::{
     ApiDescription, Body, ClientErrorStatusCode, ConfigDropshot, DropshotState, EndpointTagPolicy,
     ErrorStatusCode, HandlerError, HandlerTaskMode, HttpError, HttpServer, RequestInfo,
     ServerBuilder, ServerContext, TagConfig, TagDetails, WebsocketConnectionRaw,
 };
 use futures::Future;
+use rootcause::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -38,12 +38,12 @@ impl ApiVersion {
 }
 
 impl FromStr for ApiVersion {
-    type Err = anyhow::Error;
+    type Err = Report;
 
     fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
         match s {
             "v0" => Ok(ApiVersion::V0),
-            _ => Err(anyhow::anyhow!("Invalid API version")),
+            _ => Err(report!("Invalid API version")),
         }
     }
 }
@@ -90,7 +90,7 @@ impl ApiState {
     }
 }
 
-fn init_logger(log_level: &str, pretty: bool) -> Result<()> {
+fn init_logger(log_level: &str, pretty: bool) -> Result<(), Report> {
     let level =
         LevelFilter::from_str(log_level).context("could not parse 'log_level' configuration")?;
 
@@ -124,14 +124,14 @@ fn init_logger(log_level: &str, pretty: bool) -> Result<()> {
     Ok(())
 }
 
-fn init_api_description() -> Result<ApiDescription<Arc<ApiState>>> {
+fn init_api_description() -> Result<ApiDescription<Arc<ApiState>>, Report> {
     let mut api = ApiDescription::new();
     api = set_tagging_policy(api);
     register_routes(&mut api);
     Ok(api)
 }
 
-async fn init_api(conf: conf::api::ApiConfig) -> Result<Arc<ApiState>> {
+async fn init_api(conf: conf::api::ApiConfig) -> Result<Arc<ApiState>, Report> {
     let storage = storage::Db::new(&conf.server.storage_path)
         .await
         .context("Could not initialize storage")?;
@@ -141,7 +141,7 @@ async fn init_api(conf: conf::api::ApiConfig) -> Result<Arc<ApiState>> {
     Ok(Arc::new(api_state))
 }
 
-pub async fn start_web_services() -> Result<()> {
+pub async fn start_web_services() -> Result<(), Report> {
     let conf = conf::Configuration::<conf::api::ApiConfig>::load(None)
         .context("Could not initialize configuration")?;
 
@@ -156,13 +156,16 @@ pub async fn start_web_services() -> Result<()> {
     Ok(())
 }
 
-pub async fn start_web_service(conf: conf::api::ApiConfig, api_state: Arc<ApiState>) -> Result<()> {
+pub async fn start_web_service(
+    conf: conf::api::ApiConfig,
+    api_state: Arc<ApiState>,
+) -> Result<(), Report> {
     if conf.development.bypass_auth {
         warn!("Bypass auth activated due to config value 'development.bypass_auth'");
     }
 
     let bind_address = std::net::SocketAddr::from_str(&conf.server.bind_address.clone())
-        .with_context(|| {
+        .context_with(|| {
         format!(
             "Could not parse url '{}' while trying to bind binary to port; \
     should be in format '<ip>:<port>'; Please be sure to use an ip instead of something like 'localhost', \
@@ -182,7 +185,7 @@ pub async fn start_web_service(conf: conf::api::ApiConfig, api_state: Arc<ApiSta
     let server = ServerBuilder::new(api, api_state.clone(), Some(Arc::new(Middleware)))
         .config(dropshot_conf)
         .start()
-        .map_err(|error| anyhow!("failed to create server: {}", error))?;
+        .map_err(|error| report!("failed to create server: {}", error))?;
 
     let shutdown = server.wait_for_shutdown();
 
@@ -196,11 +199,11 @@ pub async fn start_web_service(conf: conf::api::ApiConfig, api_state: Arc<ApiSta
 
     shutdown
         .await
-        .map_err(|error| anyhow!("Server encountered errors while running; {:#?}", error))
+        .map_err(|error| report!("Server encountered errors while running; {:#?}", error))
 }
 
 #[allow(dead_code)]
-pub fn write_openapi_spec(path: PathBuf) -> Result<()> {
+pub fn write_openapi_spec(path: PathBuf) -> Result<(), Report> {
     let api = init_api_description()?;
     let mut file = std::fs::File::create(path)?;
     api.openapi("Storage", semver::Version::from_str(BUILD_SEMVER).unwrap())
