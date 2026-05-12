@@ -1,3 +1,5 @@
+mod users;
+
 use crate::{conf, storage};
 use dropshot::{
     ApiDescription, Body, ClientErrorStatusCode, ConfigDropshot, DropshotState, EndpointTagPolicy,
@@ -5,6 +7,7 @@ use dropshot::{
     ServerBuilder, ServerContext, TagConfig, TagDetails, WebsocketConnectionRaw,
 };
 use futures::Future;
+use lazy_regex::regex;
 use rootcause::prelude::*;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -257,6 +260,13 @@ fn set_tagging_policy(api: ApiDescription<Arc<ApiState>>) -> ApiDescription<Arc<
                     ..Default::default()
                 },
             ),
+            (
+                "Users".to_string(),
+                TagDetails {
+                    description: Some("Users".into()),
+                    ..Default::default()
+                },
+            ),
         ]
         .into_iter()
         .collect(),
@@ -413,4 +423,32 @@ async fn websocket_error(
         .await;
 
     message.to_string()
+}
+
+/// Generic identifier validation function.
+///
+/// This function is meant to validate user defined identifiers that may be used as primary keys
+/// and therefore should have some sane bounds.
+///
+/// For all ids we'll want the following:
+/// * 32 > characters < 3
+/// * Only alphanumeric characters or hyphens
+///
+/// We don't allow underscores to conform with common practices for url safe strings.
+pub fn is_valid_identifier(id: &str) -> Result<(), Report> {
+    let alphanumeric_w_hyphen = regex!("^[a-zA-Z0-9-]*$");
+
+    if id.len() > 32 {
+        bail!("length cannot be greater than 32");
+    }
+
+    if id.len() < 3 {
+        bail!("length cannot be less than 3");
+    }
+
+    if !alphanumeric_w_hyphen.is_match(id) {
+        bail!("can only be made up of alphanumeric and hyphen characters");
+    }
+
+    Ok(())
 }

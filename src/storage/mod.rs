@@ -13,6 +13,7 @@
 //! let some_db_call(&mut tx).await;
 //! let some_other_db_call(&mut tx).await;
 //! tx.commit() // Make sure you call commit or changes made inside the transaction wont be changed.
+pub mod users;
 
 use rootcause::prelude::*;
 use sqlx::{

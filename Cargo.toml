@@ -104,6 +104,7 @@ async-trait = "0.1"
 
 hyper = { version = "1.6", features = ["server", "full"] }
 rand = "0.10.1"
+lazy-regex = "3.6.0"
 
 
 [dev-dependencies]
