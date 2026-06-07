@@ -1,4 +1,5 @@
-use crate::storage::{epoch_milli, map_sqlx_error, StorageError};
+use crate::api::epoch_milli;
+use crate::storage::{map_sqlx_error, StorageError};
 use futures::TryFutureExt;
 use sqlx::{Execute, FromRow, QueryBuilder, Sqlite, SqliteConnection};
 
@@ -31,7 +32,7 @@ pub async fn insert(conn: &mut SqliteConnection, user: &User) -> Result<(), Stor
     let query = sqlx::query("INSERT INTO users (id, name, created, modified) VALUES (?, ?, ?, ?);")
         .bind(&user.id)
         .bind(&user.name)
-        .bind(&user.created)
+        .bind(user.created)
         .bind(&user.modified);
 
     let sql = query.sql();

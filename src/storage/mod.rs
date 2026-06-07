@@ -158,3 +158,43 @@ impl Db {
             .map_err(|e| StorageError::Connection(format!("{:?}", e)))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use rand::prelude::*;
+    use std::ops::Deref;
+
+    pub struct TestHarness {
+        pub db: Db,
+        pub storage_path: String,
+    }
+
+    impl TestHarness {
+        pub async fn new() -> Self {
+            let mut rng = rand::rng();
+            let append_num: u16 = rng.random();
+            let storage_path = format!("/tmp/parley_tests_storage{}.db", append_num);
+
+            let db = Db::new(&storage_path).await.unwrap();
+
+            Self { db, storage_path }
+        }
+    }
+
+    impl Deref for TestHarness {
+        type Target = Db;
+
+        fn deref(&self) -> &Self::Target {
+            &self.db
+        }
+    }
+
+    impl Drop for TestHarness {
+        fn drop(&mut self) {
+            std::fs::remove_file(&self.storage_path).unwrap();
+            std::fs::remove_file(format!("{}{}", &self.storage_path, "-shm")).unwrap();
+            std::fs::remove_file(format!("{}{}", &self.storage_path, "-wal")).unwrap();
+        }
+    }
+}

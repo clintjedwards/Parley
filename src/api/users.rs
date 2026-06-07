@@ -6,7 +6,7 @@ use dropshot::{
     endpoint, ClientErrorStatusCode, HttpError, HttpResponseCreated, HttpResponseDeleted,
     HttpResponseOk, Path, RequestContext, TypedBody,
 };
-use rootcause::prelude::*;
+use rootcause::{compat::boxed_error::IntoBoxedError, prelude::*};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;

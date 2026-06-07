@@ -245,29 +245,13 @@ fn set_tagging_policy(api: ApiDescription<Arc<ApiState>>) -> ApiDescription<Arc<
     api.tag_config(TagConfig {
         allow_other_tags: false,
         policy: EndpointTagPolicy::ExactlyOne,
-        tags: vec![
-            (
-                "Locations".to_string(),
-                TagDetails {
-                    description: Some("Locations".into()),
-                    ..Default::default()
-                },
-            ),
-            (
-                "Items".to_string(),
-                TagDetails {
-                    description: Some("Items".into()),
-                    ..Default::default()
-                },
-            ),
-            (
-                "Users".to_string(),
-                TagDetails {
-                    description: Some("Users".into()),
-                    ..Default::default()
-                },
-            ),
-        ]
+        tags: vec![(
+            "Users".to_string(),
+            TagDetails {
+                description: Some("Users".into()),
+                ..Default::default()
+            },
+        )]
         .into_iter()
         .collect(),
     })
@@ -352,7 +336,7 @@ pub fn _http_error(
     code: hyper::StatusCode,
     request_id: String,
     context: HashMap<String, String>,
-    err: Option<Box<dyn std::error::Error>>,
+    err: Option<Box<dyn std::error::Error + Send + Sync>>,
 ) -> HttpError {
     if let Some(ref e) = err {
         error!(message = message, request_id, error = %e, context = ?context);
@@ -402,7 +386,16 @@ fn truncate_to_utf8_bytes(s: &str, max_bytes: usize) -> String {
 /// It's better to use unwrap here for two reasons. The first is that we fail fast and early when a handler is incorrect
 /// in some way. The second is that since the underlying error returned by the register function is simply a string
 /// it can be hard to know which route caused said error without unwrapping it on the spot.
-fn register_routes(api: &mut ApiDescription<Arc<ApiState>>) {}
+fn register_routes(api: &mut ApiDescription<Arc<ApiState>>) {
+    /* /api/users */
+    api.register(users::list_users).unwrap();
+    api.register(users::create_user).unwrap();
+
+    /* /api/users/{id} */
+    api.register(users::get_user).unwrap();
+    api.register(users::update_user).unwrap();
+    api.register(users::delete_user).unwrap();
+}
 
 async fn websocket_error(
     message: &str,
